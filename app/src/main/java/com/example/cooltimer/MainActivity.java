@@ -2,6 +2,7 @@ package com.example.cooltimer;
 
 import androidx.appcompat.app.AppCompatActivity;
 
+import android.media.MediaPlayer;
 import android.os.Bundle;
 import android.os.CountDownTimer;
 import android.os.Handler;
@@ -16,6 +17,10 @@ public class MainActivity extends AppCompatActivity {
     private SeekBar seekBar;
     private TextView textView;
     private Button button;
+    private boolean isTimerOn;
+    private CountDownTimer countDownTimer;
+
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -26,6 +31,7 @@ public class MainActivity extends AppCompatActivity {
         button = findViewById(R.id.startButton);
         seekBar.setMax(600);
         seekBar.setProgress(60);
+        isTimerOn = false;
 
         seekBar.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
             @Override
@@ -50,25 +56,32 @@ public class MainActivity extends AppCompatActivity {
 
     public void StartStop (View view) {
 
-        CountDownTimer countDownTimer = new CountDownTimer(seekBar.getProgress() * 1000, 1000) {
+        if (!isTimerOn){
+            button.setText("Stop");
+            seekBar.setEnabled(false);
+            isTimerOn = true;
 
-            @Override
-            public void onTick(long millisUntilFinished) {
-                updateTimer(millisUntilFinished);
-            }
+            countDownTimer = new CountDownTimer(seekBar.getProgress() * 1000, 1000) {
 
-            @Override
-            public void onFinish() {
+                @Override
+                public void onTick(long millisUntilFinished) {
+                    updateTimer(millisUntilFinished);
+                }
 
-            }
-        }.start();
-
-
-
-
-
+                @Override
+                public void onFinish() {
+                    MediaPlayer mediaPlayer = MediaPlayer.create(getApplicationContext(), R.raw.bell_sound);
+                    mediaPlayer.start();
+                    resetTimer();
+                }
+            };
+            countDownTimer.start();
 
         }
+        else {
+            resetTimer();
+        }
+    }
     private void updateTimer(long millisUntilFinished){
         int minutes = (int)millisUntilFinished/60/1000;
         int seconds = (int)millisUntilFinished/1000 - (minutes * 60);
@@ -91,5 +104,14 @@ public class MainActivity extends AppCompatActivity {
         }
 
         textView.setText(minutesString + ":" + secondsString);
+    }
+
+    private void resetTimer(){
+        button.setText("Start");
+        countDownTimer.cancel();
+        textView.setText("01:00");
+        seekBar.setEnabled(true);
+        seekBar.setProgress(60);
+        isTimerOn = false;
     }
 }
